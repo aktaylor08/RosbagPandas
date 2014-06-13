@@ -1,4 +1,4 @@
-ros_pandas
+RosbagPandas
 ==========
 
-Ros Pandas pacakge.  Contains code to create a python pandas data frame from a ros bag file.
+Rosbag Pandas pacakge.  Contains code to create a python pandas data frame from a ros bag file.
