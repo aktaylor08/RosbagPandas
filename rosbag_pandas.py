@@ -30,7 +30,7 @@ def bag_to_dataframe(bag_name, include='all', exclude=None):
     for topic, msg, mt in bag.read_messages(topics=bag_topics):
         row = np.empty((size), dtype=object)
         row[:] = np.NaN
-        dt = pd.to_datetime(mt.to_nsec())
+        dt = pd.Timestamp(mt.to_nsec())
         index.append(dt)
         fields = dmap[topic]
         for f, idx in fields.items():
@@ -47,6 +47,7 @@ def bag_to_dataframe(bag_name, include='all', exclude=None):
 
 
     #now we have read all of the messages its time to assemble the dataframe
+    # return (datastore, index, col_names)
     return pd.DataFrame(data=datastore, index=index, columns=col_names)
             
 def create_data_stuct(msgs_to_read):
@@ -126,7 +127,7 @@ def get_field_names(bag_file, topics, output):
     return msgs
 
 
-def get_topics(bag_file):
+def get_topics(bag_file, debug=False):
     ''' Returns the names of all of the topics in the bag, and prints them
         to stdout if requested
     '''
@@ -176,6 +177,9 @@ def get_key_name(name):
         name = name[1:]
     name = name.replace('/', '.')
     return name
+
+if __name__ == '__main__':
+    bag_to_dataframe('home/ataylor/data/dat/wind4.bag')
 
 
 
