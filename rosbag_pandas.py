@@ -20,7 +20,6 @@ def bag_to_dataframe(bag_name, include=None, exclude=None):
     bag_topics = prune_topics(bag_topics, include, exclude)
     length = get_length(bag_topics, yaml_info)
     msgs_to_read, msg_type = get_msg_info(yaml_info, bag_topics)
-    print msgs_to_read
 
     bag = rosbag.Bag(bag_name)
     dmap = create_data_map(msgs_to_read)
@@ -148,39 +147,6 @@ def get_msg_info(yaml_info, topics):
                 msgs[topic] = msg_paths
     return (msgs, None)
 
-def get_field_names(bag_file, topics, output):
-    ''' Reads through a bag file and for a given set of topics, builds
-        a dictionary that holds all of the messages associated with each
-        topic '''
-    msgs = {}
-
-    # Go through every requested topic
-    for topic in topics:
-        if output:
-            print 'Getting messages for topic: ' + topic
-        # These are the strings that will allow access to the messages in the
-        # topic
-        msg_paths = []
-        # For each topic, we have a set of messages that are nested arbitrarily
-        # deep. For instance, consider a topic /subject_pose/ that is
-        # publishing StampedPose messages. We would want to build a dictionary
-        # with the topic name as the key, with the following messages in a list
-        # associated with that key.
-        for _, msg, _ in bag_file.read_messages(topic):
-            # For each message in the bag, recursively descend down the nested
-            # structure to the get to the raw data types
-            msg_paths = get_base_fields(msg,'')         
-            # Associate every discovered message with this topic
-            msgs[topic] = msg_paths
-            if output:
-                for path in msg_paths:
-                    print '\t' + path
-            # I assume that every instance of the topic in the bag will have
-            # the same structure, so after we see the first one, break out
-            # of this loop
-            break
-
-    return msgs
 
 def get_bag_info(bag_file):
     '''Get uamle dict of the bag information
