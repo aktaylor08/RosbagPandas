@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 
+import warnings
+
 import argparse
 import glob
 import os
+
 import rosbag
-import roslib; roslib.load_manifest('rosbag')
+import re
+
+
 import subprocess
 import types
 import yaml
@@ -12,7 +17,7 @@ import yaml
 import pandas as pd
 import numpy as np
 
-def bag_to_dataframe(bag_name, include='all', exclude=None):
+def bag_to_dataframe(bag_name, include=None, exclude=None):
     #get list of topics to parse
     yaml_info = get_bag_info(bag_name)
     bag_topics = get_topics(yaml_info)
@@ -21,7 +26,6 @@ def bag_to_dataframe(bag_name, include='all', exclude=None):
 
     bag = rosbag.Bag(bag_name)
     msgs_to_read = get_field_names(bag, bag_topics, False)
-    data = create_data_stuct(msgs_to_read)
     dmap = create_data_map(msgs_to_read)
 
 
@@ -60,12 +64,6 @@ def bag_to_dataframe(bag_name, include='all', exclude=None):
     #now we have read all of the messages its time to assemble the dataframe
     return pd.DataFrame(data=datastore, index=index)
             
-def create_data_stuct(msgs_to_read):
-    data = {}
-    for topic in msgs_to_read.keys():
-        fields = {field: [[],[]] for field in msgs_to_read[topic]}
-        data[topic] = fields
-    return data
 
 def get_length(topics, yaml_info):
     total = 0
@@ -90,23 +88,51 @@ def create_data_map(msgs_to_read):
 
 
 def prune_topics(bag_topics, include, exclude):
+    '''prune the topics.  If include is None add all to the set of topics to use
+       if include is a string regex match that string, if it is a list use the 
+        list   
+        
+        If exclude is None do nothing, if string remove the topics with regex,
+        if it is a list remove those topics''' 
+
     topics_to_use = set()
     #add all of the topics
-    if include == 'all':
+    if include is None:
         for t in bag_topics:
             topics_to_use.add(t)
+    elif isinstance(include, basestring):
+        check = re.compile(include)
+        for t in bag_topics:
+            if re.match(check, t) is not None:
+                topics_to_use.add(t)
     else:
+        try:
         #add all of the includes if it is in the topic
-        for topic in include:
-            if topic in bag_topics:
-                topics_to_use.add(topic)
+            for topic in include:
+                if topic in bag_topics:
+                    topics_to_use.add(topic)
+        except:
+            warnings.warn('Error in topic selection Using All!')
+            topics_to_use = set()
+            for t in bag_topics:
+                topics_to_use.add(t)
 
+    to_remove = set() 
     #now exclude the exclusions
-    if exclude is not None:
+    if exclude is None:
+        pass
+    elif isinstance(exclude, basestring):
+        check = re.compile(exclude)
+        for t in list(topics_to_use):
+            if re.match(check,t) is not None:
+                to_remove.add(t)
+    else:
         for remove in exclude:
             if remove in exclude:
-                topics_to_use.remove(remove)
+                to_remove.add(remove)
 
+    #final set stuff to get topics to use
+    topics_to_use = topics_to_use - to_remove
     #return a list for the results 
     return list(topics_to_use)
 
@@ -204,7 +230,9 @@ def get_key_name(name):
     return name
 
 if __name__ == '__main__':
-    print bag_to_dataframe('/home/ataylor/data/dat/wind2.bag')
+    df = bag_to_dataframe('/home/ataylor/data/dat/wind2.bag', include='/a/')
+    # print df.columns
+    # print df.head(1)
 
 
 
