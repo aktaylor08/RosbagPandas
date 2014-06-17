@@ -14,41 +14,51 @@ import numpy as np
 
 def bag_to_dataframe(bag_name, include='all', exclude=None):
     #get list of topics to parse
-    bag_topics = get_topics(bag_name)
+    yaml_info = get_bag_info(bag_name)
+    bag_topics = get_topics(yaml_info)
     bag_topics = prune_topics(bag_topics, include, exclude)
+    length = get_length(bag_topics, yaml_info)
 
     bag = rosbag.Bag(bag_name)
     msgs_to_read = get_field_names(bag, bag_topics, False)
     data = create_data_stuct(msgs_to_read)
-    dmap, size = create_data_map(msgs_to_read)
+    dmap = create_data_map(msgs_to_read)
 
-    datastore = []
-    index = []
+
+
+    #create datastore
+    datastore =  {}
+    for topic in dmap.keys():
+        for f, key in dmap[topic].items():
+            arr = np.empty(length)
+            arr.fill(np.NAN)
+            datastore[key] = arr
+
+    #create the index
+    index = np.empty(length) 
+    index.fill(np.NAN)
 
 
     #all of the data is loaded
+    idx = 0
     for topic, msg, mt in bag.read_messages(topics=bag_topics):
-        row = np.empty((size), dtype=object)
-        row[:] = np.NaN
-        dt = pd.Timestamp(mt.to_nsec())
-        index.append(dt)
+        index[idx] = mt.to_nsec()
         fields = dmap[topic]
-        for f, idx in fields.items():
-            row[idx] = get_message_data(msg, f)
-        datastore.append(row)
+        for f, key in fields.items():
+            try:
+                d = get_message_data(msg, f)
+                datastore[key][idx] = d 
+            except:
+                pass
+        idx = idx + 1
                 
     bag.close()
-    col_names = np.empty((size), dtype=object)
-    for t in dmap.keys():
-        for f, idx in dmap[t].items():
-            name = get_key_name(t) + '__' + f 
-            name = name.replace('.', '_')
-            col_names[idx] = name
 
+    #convert the index
+    index = pd.to_datetime(index, unit='ns')
 
     #now we have read all of the messages its time to assemble the dataframe
-    # return (datastore, index, col_names)
-    return pd.DataFrame(data=datastore, index=index, columns=col_names)
+    return pd.DataFrame(data=datastore, index=index)
             
 def create_data_stuct(msgs_to_read):
     data = {}
@@ -57,17 +67,26 @@ def create_data_stuct(msgs_to_read):
         data[topic] = fields
     return data
 
+def get_length(topics, yaml_info):
+    total = 0
+    info = yaml_info['topics']
+    for topic in topics:
+        for t in info:
+            if t['topic'] == topic:
+                total = total + t['messages']
+                break
+    return total
 
 def create_data_map(msgs_to_read):
-    idx = 0
     dmap = {}
     for topic in msgs_to_read.keys():
+        base_name = get_key_name(topic) + '__'  
         fields = {}
         for f in msgs_to_read[topic]:
-            fields[f]  =idx
-            idx = idx + 1
+            key = (base_name + f).replace('.', '_')
+            fields[f]  = key
         dmap[topic] = fields
-    return (dmap, idx)
+    return dmap
 
 
 def prune_topics(bag_topics, include, exclude):
@@ -126,19 +145,25 @@ def get_field_names(bag_file, topics, output):
 
     return msgs
 
-
-def get_topics(bag_file, debug=False):
-    ''' Returns the names of all of the topics in the bag, and prints them
-        to stdout if requested
-    '''
+def get_bag_info(bag_file):
+    '''Get uamle dict of the bag information
+    by calling the subprocess -- used to create correct sized
+    arrays'''
     # Get the info on the bag
     bag_info = yaml.load(subprocess.Popen(['rosbag', 'info', '--yaml', \
             bag_file], stdout=subprocess.PIPE).communicate()[0])
-    # Pull out the topic info
-    topics = bag_info['topics']
-    names = []
+    return bag_info
 
+
+
+def get_topics(yaml_info):
+    ''' Returns the names of all of the topics in the bag, and prints them
+        to stdout if requested
+    '''
+    # Pull out the topic info
+    names = []
     # Store all of the topics in a dictionary
+    topics = yaml_info['topics']
     for topic in topics:
         names.append(topic['topic'])
 
@@ -179,7 +204,7 @@ def get_key_name(name):
     return name
 
 if __name__ == '__main__':
-    bag_to_dataframe('home/ataylor/data/dat/wind4.bag')
+    print bag_to_dataframe('/home/ataylor/data/dat/wind2.bag')
 
 
 
