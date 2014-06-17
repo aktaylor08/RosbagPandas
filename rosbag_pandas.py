@@ -1,15 +1,7 @@
 #!/usr/bin/env python
 
 import warnings
-
-import argparse
-import glob
-import os
-
-import rosbag
 import re
-
-
 import subprocess
 import types
 import yaml
@@ -17,15 +9,20 @@ import yaml
 import pandas as pd
 import numpy as np
 
+import rosbag
+import rospy
+from roslib.message import get_message_class 
+
 def bag_to_dataframe(bag_name, include=None, exclude=None):
     #get list of topics to parse
     yaml_info = get_bag_info(bag_name)
     bag_topics = get_topics(yaml_info)
     bag_topics = prune_topics(bag_topics, include, exclude)
     length = get_length(bag_topics, yaml_info)
+    msgs_to_read, msg_type = get_msg_info(yaml_info, bag_topics)
+
 
     bag = rosbag.Bag(bag_name)
-    msgs_to_read = get_field_names(bag, bag_topics, False)
     dmap = create_data_map(msgs_to_read)
 
 
@@ -136,6 +133,22 @@ def prune_topics(bag_topics, include, exclude):
     #return a list for the results 
     return list(topics_to_use)
 
+
+def get_msg_info(yaml_info, topics):
+    topic_info = yaml_info['topics']
+    msgs = {}
+    classes = {}
+    
+    for topic in topics:
+        base_key = get_key_name(topic)
+        msg_paths =  []
+        #find the type
+        for info in topic_info:
+            if info['topic'] == topic:
+                msg_class = get_message_class(info['type'])
+                msg_paths = get_base_fields(msg_class,"")
+                msgs[topic] = msg_paths
+    return (msgs, None)
 
 def get_field_names(bag_file, topics, output):
     ''' Reads through a bag file and for a given set of topics, builds
