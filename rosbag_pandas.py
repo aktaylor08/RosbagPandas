@@ -20,12 +20,10 @@ def bag_to_dataframe(bag_name, include=None, exclude=None):
     bag_topics = prune_topics(bag_topics, include, exclude)
     length = get_length(bag_topics, yaml_info)
     msgs_to_read, msg_type = get_msg_info(yaml_info, bag_topics)
-
+    print msgs_to_read
 
     bag = rosbag.Bag(bag_name)
     dmap = create_data_map(msgs_to_read)
-
-
 
     #create datastore
     datastore =  {}
@@ -146,7 +144,7 @@ def get_msg_info(yaml_info, topics):
         for info in topic_info:
             if info['topic'] == topic:
                 msg_class = get_message_class(info['type'])
-                msg_paths = get_base_fields(msg_class,"")
+                msg_paths = get_base_fields(msg_class(),"")
                 msgs[topic] = msg_paths
     return (msgs, None)
 
