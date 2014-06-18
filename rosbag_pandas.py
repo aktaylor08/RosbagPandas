@@ -143,7 +143,10 @@ def get_msg_info(yaml_info, topics):
         for info in topic_info:
             if info['topic'] == topic:
                 msg_class = get_message_class(info['type'])
-                msg_paths = get_base_fields(msg_class(),"")
+                if msg_class is None:
+                    warnings.warn('Could not find types for ' + topic + 'skpping ')
+                else:
+                    msg_paths = get_base_fields(msg_class(),"")
                 msgs[topic] = msg_paths
     return (msgs, None)
 
@@ -207,9 +210,7 @@ def get_key_name(name):
     return name
 
 if __name__ == '__main__':
-    df = bag_to_dataframe('/home/ataylor/data/dat/wind2.bag', include='/a/')
-    # print df.columns
-    # print df.head(1)
+    print 'hello'
 
 
 
