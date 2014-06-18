@@ -43,8 +43,13 @@ def bag_to_dataframe(bag_name, include=None, exclude=None):
     datastore =  {}
     for topic in dmap.keys():
         for f, key in dmap[topic].items():
-            arr = np.empty(length)
-            arr.fill(np.NAN)
+            t = msg_type[topic][f]
+            if isinstance(t,int) or isinstance(t,float):
+                arr = np.empty(length)
+                arr.fill(np.NAN)
+            else:
+                arr = np.array([None] * length)
+                print arr, type(t) 
             datastore[key] = arr
 
     #create the index
@@ -163,17 +168,18 @@ def get_msg_info(yaml_info, topics):
     for topic in topics:
         base_key = get_key_name(topic)
         msg_paths =  []
+        msg_types = {}
         #find the type
         for info in topic_info:
             if info['topic'] == topic:
                 msg_class = get_message_class(info['type'])
                 if msg_class is None:
-                    warnings.warn('Could not find types for ' + topic + ' skpping ')
+                    warnings.warn('Could not find types for ' + topic + ' skpping ') 
                 else:
-                    msg_paths = get_base_fields(msg_class(),"")
-                    #TODO: Get the types of subfields
+                    (msg_paths, msg_types) = get_base_fields(msg_class(),"")
                 msgs[topic] = msg_paths
-    return (msgs, None)
+                classes[topic] = msg_types
+    return (msgs, classes)
 
 
 def get_bag_info(bag_file):
@@ -184,7 +190,6 @@ def get_bag_info(bag_file):
     bag_info = yaml.load(subprocess.Popen(['rosbag', 'info', '--yaml', \
             bag_file], stdout=subprocess.PIPE).communicate()[0])
     return bag_info
-
 
 
 def get_topics(yaml_info):
@@ -201,19 +206,25 @@ def get_topics(yaml_info):
     return names
 
 
-def get_base_fields(msg, prefix=''):
+def get_base_fields(msg, prefix='' ):
     '''function to get the full names of every message field in the message'''
     slots = msg.__slots__
     ret_val = []
+    msg_types = dict()
     for i in slots:
         slot_msg = getattr(msg, i)
         if hasattr(slot_msg, '__slots__'):
-                subs = get_base_fields(slot_msg, prefix=prefix + i + '.')
+                (subs,type_map) = get_base_fields(slot_msg, prefix=prefix + i + '.')
                 for i in subs:
                     ret_val.append(i)
+                for k,v in type_map.items():
+                    msg_types[k] = v
+                    
+
         else:
             ret_val.append(prefix + i)
-    return ret_val 
+            msg_types[prefix + i] = slot_msg
+    return (ret_val, msg_types)
 
 
 def get_message_data(msg, key):
@@ -234,8 +245,8 @@ def get_key_name(name):
     name = name.replace('/', '.')
     return name
 
+
 if __name__ == '__main__':
+    bag_to_dataframe('/home/ataylor/data/dat/wind1.bag')
     print 'hello'
-
-
 
