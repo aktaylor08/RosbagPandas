@@ -14,6 +14,21 @@ import rospy
 from roslib.message import get_message_class 
 
 def bag_to_dataframe(bag_name, include=None, exclude=None):
+    '''
+    Read in a rosbag file and create a pandas data frame that 
+    is indexed by the time the message was recorded in the bag.
+
+    :bag_name: String name for the bag file
+    :include: None, String, or List  Topics to include in the dataframe
+               if None all topics added, if string it is used as regular 
+                   expression, if list that list is used.
+    :exclude: None, String, or List  Topics to be removed from those added
+            using the include option using set difference.  If None no topics
+            removed. If String it is treated as a regular expression. A list
+            removes those in the list.
+
+    :returns: a pandas dataframe object
+    '''
     #get list of topics to parse
     yaml_info = get_bag_info(bag_name)
     bag_topics = get_topics(yaml_info)
@@ -35,7 +50,6 @@ def bag_to_dataframe(bag_name, include=None, exclude=None):
     #create the index
     index = np.empty(length) 
     index.fill(np.NAN)
-
 
     #all of the data is loaded
     idx = 0
@@ -60,6 +74,9 @@ def bag_to_dataframe(bag_name, include=None, exclude=None):
             
 
 def get_length(topics, yaml_info):
+    '''
+    Find the length (# of rows) in the created dataframe
+    '''
     total = 0
     info = yaml_info['topics']
     for topic in topics:
@@ -70,6 +87,9 @@ def get_length(topics, yaml_info):
     return total
 
 def create_data_map(msgs_to_read):
+    '''
+    Create a data map for usage when parsing the bag
+    '''
     dmap = {}
     for topic in msgs_to_read.keys():
         base_name = get_key_name(topic) + '__'  
@@ -132,6 +152,10 @@ def prune_topics(bag_topics, include, exclude):
 
 
 def get_msg_info(yaml_info, topics):
+    '''
+    Get info from all of the messages about what they contain
+    and will be added to the dataframe
+    '''
     topic_info = yaml_info['topics']
     msgs = {}
     classes = {}
@@ -144,9 +168,10 @@ def get_msg_info(yaml_info, topics):
             if info['topic'] == topic:
                 msg_class = get_message_class(info['type'])
                 if msg_class is None:
-                    warnings.warn('Could not find types for ' + topic + 'skpping ')
+                    warnings.warn('Could not find types for ' + topic + ' skpping ')
                 else:
                     msg_paths = get_base_fields(msg_class(),"")
+                    #TODO: Get the types of subfields
                 msgs[topic] = msg_paths
     return (msgs, None)
 

@@ -19,3 +19,9 @@ parameters to limit the topics read into the dataframe.
 
 Examples include using a regular expression to filter or add topics
 as well as filtering or adding from a list.
+
+Also installs two scripts:
+
+bag_graph.py which allows a user to produce a quick graph of data in a bag file.
+
+bag2csv.py allows a user to quickly convert data in a rosbag into csv format.
