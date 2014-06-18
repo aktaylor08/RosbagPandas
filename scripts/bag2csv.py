@@ -11,27 +11,31 @@ import argparse
 
 def buildParser():
     ''' Builds the parser for reading the command line arguments'''
-    parser = argparse.ArgumentParser(description=\
-            'Script to parse bagfile to csv file')
-    parser.add_argument('bag', help = 'Bag file to read', \
-             type = str)
-    parser.add_argument('-i', '--include', help = 'list or regex for topics to include', \
-             nargs='*')
-    parser.add_argument('-e', '--exclude', help = 'list or regex for topics to exclude', \
-             nargs='*')
-    parser.add_argument('-o', '--output', help = 'name of the output file', \
-             nargs='*')
-    parser.add_argument('-f', '--fill', help = 'Fill the bag forward and backwards so no missing values when present', \
-            action='store_true') 
+    parser = argparse.ArgumentParser(
+        description='Script to parse bagfile to csv file')
+    parser.add_argument('bag', help='Bag file to read',
+                        type=str)
+    parser.add_argument('-i', '--include',
+                        help='list or regex for topics to include',
+                        nargs='*')
+    parser.add_argument('-e', '--exclude',
+                        help='list or regex for topics to exclude',
+                        nargs='*')
+    parser.add_argument('-o', '--output',
+                        help='name of the output file',
+                        nargs='*')
+    parser.add_argument('-f', '--fill',
+                        help='Fill the bag forward and backwards so no missing values when present',
+                        action='store_true')
     return parser
 
 
 def do_work(bag, include, exclude, output, fill):
-    #covert a lenght one value to a regex
+    # covert a lenght one value to a regex
     if include is not None and len(include) == 1:
         include = include[0]
 
-    #covert a lenght one value to a regex
+    # covert a lenght one value to a regex
     if exclude is not None and len(exclude) == 1:
         exclude = exclude[0]
 
@@ -40,9 +44,8 @@ def do_work(bag, include, exclude, output, fill):
         df = df.ffill().bfill()
 
     if output is None:
-        base,_ = os.path.splitext(bag)
+        base, _ = os.path.splitext(bag)
         output = base + '.csv'
-
 
     df.to_csv(output)
 
@@ -61,4 +64,3 @@ if __name__ == '__main__':
     fill = args.fill
 
     do_work(bag, include, exclude, output, fill)
-

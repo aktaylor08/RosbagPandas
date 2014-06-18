@@ -9,32 +9,36 @@ import argparse
 
 def buildParser():
     ''' Builds the parser for reading the command line arguments'''
-    parser = argparse.ArgumentParser(description=\
-            'Bagfile reader')
-    parser.add_argument('-b', '--bag', help = 'Bag file to read', \
-            required = True, type = str)
-    parser.add_argument('-s', '--series', help = 'Msg data fields to graph', \
-            required = True, nargs='*')
-    parser.add_argument('-y ', '--ylim', help='Set min and max y lim', \
-            required = False, nargs=2)
-    parser.add_argument('-c', '--combined', help="Graph them all on one", \
-            required=False, action="store_true", dest="sharey")
+    parser = argparse.ArgumentParser(description='Bagfile reader')
+    parser.add_argument('-b', '--bag', help='Bag file to read',
+                        required=True, type=str)
+    parser.add_argument('-s', '--series',
+                        help='Msg data fields to graph',
+                        required=True, nargs='*')
+    parser.add_argument('-y ', '--ylim',
+                        help='Set min and max y lim',
+                        required=False, nargs=2)
+    parser.add_argument('-c', '--combined',
+                        help="Graph them all on one",
+                        required=False, action="store_true", dest="sharey")
     return parser
+
 
 def parse_series_args(topics, fields):
     '''Return which topics and which field keys need to be examined
     for plotting'''
     keys = {}
-    for field  in fields:
-        for topic  in topics:
+    for field in fields:
+        for topic in topics:
             if field.startswith(topic):
                 keys[field] = (topic, field[len(topic) + 1:])
 
     return keys
 
+
 def graph(df, df_keys, sharey):
-    if sharey or len(df_keys) ==1:
-        fig,axes = plt.subplots()
+    if sharey or len(df_keys) == 1:
+        fig, axes = plt.subplots()
         for label, key in df_keys.items():
             s = df[key].dropna()
             axes.plot(s.index, s.values, label=label)
@@ -42,7 +46,7 @@ def graph(df, df_keys, sharey):
         axes.legend(loc=0)
         plt.show()
     else:
-        fig,axes = plt.subplots(len(df_keys), sharex=True)
+        fig, axes = plt.subplots(len(df_keys), sharex=True)
         idx = 0
         for label, key in df_keys.items():
             s = df[key].dropna()
@@ -50,11 +54,6 @@ def graph(df, df_keys, sharey):
             axes[idx].set_title(label)
             idx = idx + 1
         plt.show()
-
-
-
-
-
 
 
 if __name__ == '__main__':
@@ -72,19 +71,12 @@ if __name__ == '__main__':
     data_keys = parse_series_args(topics, fields)
     df_keys = {}
     topics = []
-    for k,v in data_keys.items():
-        column = rosbag_pandas.get_key_name(v[0]) + '__' + rosbag_pandas.get_key_name(v[1])
-        column = column.replace('.','_')
+    for k, v in data_keys.items():
+        column = rosbag_pandas.get_key_name(
+            v[0]) + '__' + rosbag_pandas.get_key_name(v[1])
+        column = column.replace('.', '_')
         df_keys[k] = column
         topics.append(v[0])
 
     df = rosbag_pandas.bag_to_dataframe(bag, include=topics)
     graph(df, df_keys, sharey)
-
-        
-
-    
-
-    
-
-
