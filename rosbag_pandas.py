@@ -49,7 +49,6 @@ def bag_to_dataframe(bag_name, include=None, exclude=None):
                 arr.fill(np.NAN)
             else:
                 arr = np.array([None] * length)
-                print arr, type(t) 
             datastore[key] = arr
 
     #create the index
@@ -247,6 +246,5 @@ def get_key_name(name):
 
 
 if __name__ == '__main__':
-    bag_to_dataframe('/home/ataylor/data/dat/wind1.bag')
     print 'hello'
 
