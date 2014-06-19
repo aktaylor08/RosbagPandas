@@ -16,12 +16,12 @@ from roslib.message import get_message_class
 
 def bag_to_dataframe(bag_name, include=None, exclude=None):
     '''
-    Read in a rosbag file and create a pandas data frame that 
+    Read in a rosbag file and create a pandas data frame that
     is indexed by the time the message was recorded in the bag.
 
     :bag_name: String name for the bag file
     :include: None, String, or List  Topics to include in the dataframe
-               if None all topics added, if string it is used as regular 
+               if None all topics added, if string it is used as regular
                    expression, if list that list is used.
     :exclude: None, String, or List  Topics to be removed from those added
             using the include option using set difference.  If None no topics
@@ -45,7 +45,7 @@ def bag_to_dataframe(bag_name, include=None, exclude=None):
     for topic in dmap.keys():
         for f, key in dmap[topic].items():
             t = msg_type[topic][f]
-            if isinstance(t,int) or isinstance(t,float):
+            if isinstance(t, int) or isinstance(t, float):
                 arr = np.empty(length)
                 arr.fill(np.NAN)
             else:
@@ -108,9 +108,9 @@ def create_data_map(msgs_to_read):
 
 
 def prune_topics(bag_topics, include, exclude):
-    '''prune the topics.  If include is None add all to the set of topics to use
-       if include is a string regex match that string, if it is a list use the
-        list
+    '''prune the topics.  If include is None add all to the set of topics to
+       use if include is a string regex match that string,
+       if it is a list use the list
 
         If exclude is None do nothing, if string remove the topics with regex,
         if it is a list remove those topics'''
@@ -168,16 +168,16 @@ def get_msg_info(yaml_info, topics):
 
     for topic in topics:
         base_key = get_key_name(topic)
-        msg_paths =  []
+        msg_paths = []
         msg_types = {}
         for info in topic_info:
             if info['topic'] == topic:
                 msg_class = get_message_class(info['type'])
                 if msg_class is None:
                     warnings.warn(
-                            'Could not find types for ' + topic + ' skpping ') 
+                        'Could not find types for ' + topic + ' skpping ')
                 else:
-                    (msg_paths, msg_types) = get_base_fields(msg_class(),"")
+                    (msg_paths, msg_types) = get_base_fields(msg_class(), "")
                 msgs[topic] = msg_paths
                 classes[topic] = msg_types
     return (msgs, classes)
@@ -208,7 +208,7 @@ def get_topics(yaml_info):
     return names
 
 
-def get_base_fields(msg, prefix='' ):
+def get_base_fields(msg, prefix=''):
     '''function to get the full names of every message field in the message'''
     slots = msg.__slots__
     ret_val = []
@@ -216,13 +216,14 @@ def get_base_fields(msg, prefix='' ):
     for i in slots:
         slot_msg = getattr(msg, i)
         if hasattr(slot_msg, '__slots__'):
-                (subs,type_map) = get_base_fields(slot_msg, prefix=prefix + i + '.')
+                (subs, type_map) = get_base_fields(
+                    slot_msg, prefix=prefix + i + '.'
+                )
+
                 for i in subs:
                     ret_val.append(i)
-                for k,v in type_map.items():
+                for k, v in type_map.items():
                     msg_types[k] = v
-                    
-
         else:
             ret_val.append(prefix + i)
             msg_types[prefix + i] = slot_msg

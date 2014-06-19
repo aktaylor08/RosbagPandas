@@ -3,3 +3,4 @@ v0.3, 2014-06-17 -- Added scripts for graphing and parsing to csv
 v0.3.1, 2014-06-17 -- Small fixes 
 v0.3.2, 2014-06-17 -- Fix to setup.py to add description, code documentaiton 
 v0.3.3, 2014-06-18 -- Added support for non numerical data 
+v0.3.4, 2014-06-18 -- Pep8 complience 
