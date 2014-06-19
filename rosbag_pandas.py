@@ -11,7 +11,8 @@ import numpy as np
 
 import rosbag
 import rospy
-from roslib.message import get_message_class 
+from roslib.message import get_message_class
+
 
 def bag_to_dataframe(bag_name, include=None, exclude=None):
     '''
@@ -29,7 +30,7 @@ def bag_to_dataframe(bag_name, include=None, exclude=None):
 
     :returns: a pandas dataframe object
     '''
-    #get list of topics to parse
+    # get list of topics to parse
     yaml_info = get_bag_info(bag_name)
     bag_topics = get_topics(yaml_info)
     bag_topics = prune_topics(bag_topics, include, exclude)
@@ -39,8 +40,8 @@ def bag_to_dataframe(bag_name, include=None, exclude=None):
     bag = rosbag.Bag(bag_name)
     dmap = create_data_map(msgs_to_read)
 
-    #create datastore
-    datastore =  {}
+    # create datastore
+    datastore = {}
     for topic in dmap.keys():
         for f, key in dmap[topic].items():
             t = msg_type[topic][f]
@@ -51,11 +52,11 @@ def bag_to_dataframe(bag_name, include=None, exclude=None):
                 arr = np.array([None] * length)
             datastore[key] = arr
 
-    #create the index
-    index = np.empty(length) 
+    # create the index
+    index = np.empty(length)
     index.fill(np.NAN)
 
-    #all of the data is loaded
+    # all of the data is loaded
     idx = 0
     for topic, msg, mt in bag.read_messages(topics=bag_topics):
         index[idx] = mt.to_nsec()
@@ -63,19 +64,19 @@ def bag_to_dataframe(bag_name, include=None, exclude=None):
         for f, key in fields.items():
             try:
                 d = get_message_data(msg, f)
-                datastore[key][idx] = d 
+                datastore[key][idx] = d
             except:
                 pass
         idx = idx + 1
-                
+
     bag.close()
 
-    #convert the index
+    # convert the index
     index = pd.to_datetime(index, unit='ns')
 
-    #now we have read all of the messages its time to assemble the dataframe
+    # now we have read all of the messages its time to assemble the dataframe
     return pd.DataFrame(data=datastore, index=index)
-            
+
 
 def get_length(topics, yaml_info):
     '''
@@ -90,31 +91,32 @@ def get_length(topics, yaml_info):
                 break
     return total
 
+
 def create_data_map(msgs_to_read):
     '''
     Create a data map for usage when parsing the bag
     '''
     dmap = {}
     for topic in msgs_to_read.keys():
-        base_name = get_key_name(topic) + '__'  
+        base_name = get_key_name(topic) + '__'
         fields = {}
         for f in msgs_to_read[topic]:
             key = (base_name + f).replace('.', '_')
-            fields[f]  = key
+            fields[f] = key
         dmap[topic] = fields
     return dmap
 
 
 def prune_topics(bag_topics, include, exclude):
     '''prune the topics.  If include is None add all to the set of topics to use
-       if include is a string regex match that string, if it is a list use the 
-        list   
-        
+       if include is a string regex match that string, if it is a list use the
+        list
+
         If exclude is None do nothing, if string remove the topics with regex,
-        if it is a list remove those topics''' 
+        if it is a list remove those topics'''
 
     topics_to_use = set()
-    #add all of the topics
+    # add all of the topics
     if include is None:
         for t in bag_topics:
             topics_to_use.add(t)
@@ -125,7 +127,7 @@ def prune_topics(bag_topics, include, exclude):
                 topics_to_use.add(t)
     else:
         try:
-        #add all of the includes if it is in the topic
+            # add all of the includes if it is in the topic
             for topic in include:
                 if topic in bag_topics:
                     topics_to_use.add(topic)
@@ -135,23 +137,23 @@ def prune_topics(bag_topics, include, exclude):
             for t in bag_topics:
                 topics_to_use.add(t)
 
-    to_remove = set() 
-    #now exclude the exclusions
+    to_remove = set()
+    # now exclude the exclusions
     if exclude is None:
         pass
     elif isinstance(exclude, basestring):
         check = re.compile(exclude)
         for t in list(topics_to_use):
-            if re.match(check,t) is not None:
+            if re.match(check, t) is not None:
                 to_remove.add(t)
     else:
         for remove in exclude:
             if remove in exclude:
                 to_remove.add(remove)
 
-    #final set stuff to get topics to use
+    # final set stuff to get topics to use
     topics_to_use = topics_to_use - to_remove
-    #return a list for the results 
+    # return a list for the results
     return list(topics_to_use)
 
 
@@ -163,17 +165,17 @@ def get_msg_info(yaml_info, topics):
     topic_info = yaml_info['topics']
     msgs = {}
     classes = {}
-    
+
     for topic in topics:
         base_key = get_key_name(topic)
         msg_paths =  []
         msg_types = {}
-        #find the type
         for info in topic_info:
             if info['topic'] == topic:
                 msg_class = get_message_class(info['type'])
                 if msg_class is None:
-                    warnings.warn('Could not find types for ' + topic + ' skpping ') 
+                    warnings.warn(
+                            'Could not find types for ' + topic + ' skpping ') 
                 else:
                     (msg_paths, msg_types) = get_base_fields(msg_class(),"")
                 msgs[topic] = msg_paths
@@ -186,8 +188,9 @@ def get_bag_info(bag_file):
     by calling the subprocess -- used to create correct sized
     arrays'''
     # Get the info on the bag
-    bag_info = yaml.load(subprocess.Popen(['rosbag', 'info', '--yaml', \
-            bag_file], stdout=subprocess.PIPE).communicate()[0])
+    bag_info = yaml.load(subprocess.Popen(
+        ['rosbag', 'info', '--yaml', bag_file],
+        stdout=subprocess.PIPE).communicate()[0])
     return bag_info
 
 
@@ -227,10 +230,10 @@ def get_base_fields(msg, prefix='' ):
 
 
 def get_message_data(msg, key):
-    '''get the datapoint from the dot delimited message field key 
+    '''get the datapoint from the dot delimited message field key
     e.g. translation.x looks up translation than x and returns the value found
     in x'''
-    data = msg 
+    data = msg
     paths = key.split('.')
     for i in paths:
         data = getattr(data, i)
@@ -247,4 +250,4 @@ def get_key_name(name):
 
 if __name__ == '__main__':
     print 'hello'
-
+    print bag_to_dataframe('/home/ataylor/bags/fan_tests/wind1.bag')
