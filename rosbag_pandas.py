@@ -14,7 +14,7 @@ import rospy
 from roslib.message import get_message_class
 
 
-def bag_to_dataframe(bag_name, include=None, exclude=None):
+def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=True):
     '''
     Read in a rosbag file and create a pandas data frame that
     is indexed by the time the message was recorded in the bag.
@@ -35,7 +35,7 @@ def bag_to_dataframe(bag_name, include=None, exclude=None):
     bag_topics = get_topics(yaml_info)
     bag_topics = prune_topics(bag_topics, include, exclude)
     length = get_length(bag_topics, yaml_info)
-    msgs_to_read, msg_type = get_msg_info(yaml_info, bag_topics)
+    msgs_to_read, msg_type = get_msg_info(yaml_info, bag_topics, parse_header)
 
     bag = rosbag.Bag(bag_name)
     dmap = create_data_map(msgs_to_read)
@@ -157,7 +157,7 @@ def prune_topics(bag_topics, include, exclude):
     return list(topics_to_use)
 
 
-def get_msg_info(yaml_info, topics):
+def get_msg_info(yaml_info, topics, parse_header=True):
     '''
     Get info from all of the messages about what they contain
     and will be added to the dataframe
@@ -177,7 +177,8 @@ def get_msg_info(yaml_info, topics):
                     warnings.warn(
                         'Could not find types for ' + topic + ' skpping ')
                 else:
-                    (msg_paths, msg_types) = get_base_fields(msg_class(), "")
+                    (msg_paths, msg_types) = get_base_fields(msg_class(), "",
+                                                             parse_header)
                 msgs[topic] = msg_paths
                 classes[topic] = msg_types
     return (msgs, classes)
@@ -208,16 +209,19 @@ def get_topics(yaml_info):
     return names
 
 
-def get_base_fields(msg, prefix=''):
+def get_base_fields(msg, prefix='', parse_header=True):
     '''function to get the full names of every message field in the message'''
     slots = msg.__slots__
     ret_val = []
     msg_types = dict()
     for i in slots:
         slot_msg = getattr(msg, i)
+        if not parse_header and i == 'header':
+            continue
         if hasattr(slot_msg, '__slots__'):
                 (subs, type_map) = get_base_fields(
-                    slot_msg, prefix=prefix + i + '.'
+                    slot_msg, prefix=prefix + i + '.',
+                    parse_header=parse_header,
                 )
 
                 for i in subs:
