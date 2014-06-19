@@ -250,4 +250,3 @@ def get_key_name(name):
 
 if __name__ == '__main__':
     print 'hello'
-    print bag_to_dataframe('/home/ataylor/bags/fan_tests/wind1.bag')
