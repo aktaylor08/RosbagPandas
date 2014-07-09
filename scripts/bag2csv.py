@@ -27,10 +27,13 @@ def buildParser():
     parser.add_argument('-f', '--fill',
                         help='Fill the bag forward and backwards so no missing values when present',
                         action='store_true')
+    parser.add_argument('--include-header',
+                        help='Include the header fields.  By default they are excluded',
+                        action='store_true')
     return parser
 
 
-def do_work(bag, include, exclude, output, fill):
+def do_work(bag, include, exclude, output, fill, header):
     # covert a lenght one value to a regex
     if include is not None and len(include) == 1:
         include = include[0]
@@ -38,8 +41,8 @@ def do_work(bag, include, exclude, output, fill):
     # covert a lenght one value to a regex
     if exclude is not None and len(exclude) == 1:
         exclude = exclude[0]
-
-    df = rosbag_pandas.bag_to_dataframe(bag, include=include, exclude=exclude)
+    df = rosbag_pandas.bag_to_dataframe(bag, include=include, exclude=exclude, 
+            parse_header=header)
     if fill:
         df = df.ffill().bfill()
 
@@ -62,5 +65,6 @@ if __name__ == '__main__':
     exclude = args.exclude
     output = args.output
     fill = args.fill
+    header = args.include_header
 
-    do_work(bag, include, exclude, output, fill)
+    do_work(bag, include, exclude, output, fill, header)
