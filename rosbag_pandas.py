@@ -14,7 +14,7 @@ import rospy
 from roslib.message import get_message_class
 
 
-def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=True):
+def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False):
     '''
     Read in a rosbag file and create a pandas data frame that
     is indexed by the time the message was recorded in the bag.
@@ -251,6 +251,18 @@ def get_key_name(name):
         name = name[1:]
     name = name.replace('/', '.')
     return name
+
+
+def clean_for_export(name):
+    for c, t in df.dtypes.iteritems():
+        if t.kind in 'OSUV':
+            df[c] = df[c].apply(func=str)
+            df[c] = df[c].str.replace('\n', '')
+            df[c] = df[c].str.replace('\r', '')
+            df[c] = df[c].str.replace(',','\t')
+    return df
+
+
 
 
 if __name__ == '__main__':
