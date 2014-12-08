@@ -253,14 +253,19 @@ def get_key_name(name):
     return name
 
 
-def clean_for_export(name):
+def clean_for_export(df):
+    new_df = pands.DataFrame()
     for c, t in df.dtypes.iteritems():
         if t.kind in 'OSUV':
-            df[c] = df[c].apply(func=str)
-            df[c] = df[c].str.replace('\n', '')
-            df[c] = df[c].str.replace('\r', '')
-            df[c] = df[c].str.replace(',','\t')
-    return df
+            s =  df[c].dropna().apply(func=str)
+            s = s.str.replace('\n', '')
+            s = s.str.replace('\r', '')
+            s = s.str.replace(',','\t')
+            new_df[c] = s
+        else:
+            new_df[c] = df[c]
+
+    return new_df 
 
 
 
