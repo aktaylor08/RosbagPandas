@@ -254,7 +254,7 @@ def get_key_name(name):
 
 
 def clean_for_export(df):
-    new_df = pands.DataFrame()
+    new_df = pd.DataFrame()
     for c, t in df.dtypes.iteritems():
         if t.kind in 'OSUV':
             s =  df[c].dropna().apply(func=str)
