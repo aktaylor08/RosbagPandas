@@ -14,7 +14,7 @@ import rospy
 from roslib.message import get_message_class
 
 
-def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False):
+def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False, seconds=False):
     '''
     Read in a rosbag file and create a pandas data frame that
     is indexed by the time the message was recorded in the bag.
@@ -27,6 +27,8 @@ def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False):
             using the include option using set difference.  If None no topics
             removed. If String it is treated as a regular expression. A list
             removes those in the list.
+
+    :seconds: time index is in seconds
 
     :returns: a pandas dataframe object
     '''
@@ -59,7 +61,16 @@ def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False):
     # all of the data is loaded
     idx = 0
     for topic, msg, mt in bag.read_messages(topics=bag_topics):
-        index[idx] = mt.to_nsec()
+        try:
+            if seconds:
+                index[idx] = msg.header.stamp.to_sec()
+            else:
+                index[idx] = msg.header.stamp.to_nsec()
+        except:
+            if seconds:
+                index[idx] = mt.to_sec()
+            else:
+                index[idx] = mt.to_nsec()
         fields = dmap[topic]
         for f, key in fields.items():
             try:
@@ -72,7 +83,8 @@ def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False):
     bag.close()
 
     # convert the index
-    index = pd.to_datetime(index, unit='ns')
+    if not seconds:
+        index = pd.to_datetime(index, unit='ns')
 
     # now we have read all of the messages its time to assemble the dataframe
     return pd.DataFrame(data=datastore, index=index)
