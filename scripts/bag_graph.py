@@ -78,5 +78,5 @@ if __name__ == '__main__':
         df_keys[k] = column
         topics.append(v[0])
 
-    df = rosbag_pandas.bag_to_dataframe(bag, include=topics)
+    df = rosbag_pandas.bag_to_dataframe(bag, include=topics, seconds=True)
     graph(df, df_keys, sharey)

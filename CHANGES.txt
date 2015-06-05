@@ -8,3 +8,5 @@ v0.3.5, 2014-06-19 -- Added ability to exclude header message information in cre
 v0.3.6, 2014-06-19 -- Changed default behavior of bag2csv.py to exclude the header 
 v0.3.7, 2014-11-13 -- Improved how the pacakge handles output of csv with non numerical data. Sanitze to get rid of new lines and commas 
 v0.3.7.1, 2014-11-13 -- Fixed an error in previous release that filled strings with None 
+v0.4.0.0, 2015-06-05 -- Merge pull request to allow time based on seconds since start 
+
