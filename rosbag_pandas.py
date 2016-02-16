@@ -50,6 +50,13 @@ def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False, s
             if isinstance(t, int) or isinstance(t, float):
                 arr = np.empty(length)
                 arr.fill(np.NAN)
+            elif isinstance(t, list):
+                arr = np.empty(length)
+                arr.fill(np.NAN)
+                for i in range(len(t)):
+                    key_i = '{0}{1}'.format(key, i)
+                    datastore[key_i] = arr.copy()
+                continue
             else:
                 arr = np.array([None] * length)
             datastore[key] = arr
@@ -75,7 +82,12 @@ def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False, s
         for f, key in fields.items():
             try:
                 d = get_message_data(msg, f)
-                datastore[key][idx] = d
+                if isinstance(d, tuple):
+                    for i, val in enumerate(d):
+                        key_i = '{0}{1}'.format(key, i)
+                        datastore[key_i][idx] = val
+                else:
+                    datastore[key][idx] = d
             except:
                 pass
         idx = idx + 1
