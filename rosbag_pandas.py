@@ -45,13 +45,20 @@ def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False, s
     # create datastore
     datastore = {}
     for topic in dmap.keys():
-        for f, key in dmap[topic].items():
+        for f, key in dmap[topic].iteritems():
             t = msg_type[topic][f]
             if isinstance(t, int) or isinstance(t, float):
                 arr = np.empty(length)
                 arr.fill(np.NAN)
+            elif isinstance(t, list):
+                arr = np.empty(length)
+                arr.fill(np.NAN)
+                for i in range(len(t)):
+                    key_i = '{0}{1}'.format(key, i)
+                    datastore[key_i] = arr.copy()
+                continue
             else:
-                arr = np.array([None] * length)
+                arr = np.empty(length, dtype=np.object)
             datastore[key] = arr
 
     # create the index
@@ -59,8 +66,7 @@ def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False, s
     index.fill(np.NAN)
 
     # all of the data is loaded
-    idx = 0
-    for topic, msg, mt in bag.read_messages(topics=bag_topics):
+    for idx, (topic, msg, mt) in enumerate(bag.read_messages(topics=bag_topics)):
         try:
             if seconds:
                 index[idx] = msg.header.stamp.to_sec()
@@ -72,13 +78,17 @@ def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False, s
             else:
                 index[idx] = mt.to_nsec()
         fields = dmap[topic]
-        for f, key in fields.items():
+        for f, key in fields.iteritems():
             try:
                 d = get_message_data(msg, f)
-                datastore[key][idx] = d
+                if isinstance(d, tuple):
+                    for i, val in enumerate(d):
+                        key_i = '{0}{1}'.format(key, i)
+                        datastore[key_i][idx] = val
+                else:
+                    datastore[key][idx] = d
             except:
                 pass
-        idx = idx + 1
 
     bag.close()
 
@@ -269,7 +279,7 @@ def clean_for_export(df):
     new_df = pd.DataFrame()
     for c, t in df.dtypes.iteritems():
         if t.kind in 'OSUV':
-            s =  df[c].dropna().apply(func=str)
+            s = df[c].dropna().apply(func=str)
             s = s.str.replace('\n', '')
             s = s.str.replace('\r', '')
             s = s.str.replace(',','\t')
@@ -280,7 +290,5 @@ def clean_for_export(df):
     return new_df 
 
 
-
-
 if __name__ == '__main__':
-    print 'hello'
+    print('hello')
