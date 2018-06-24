@@ -9,4 +9,7 @@ v0.3.6, 2014-06-19 -- Changed default behavior of bag2csv.py to exclude the head
 v0.3.7, 2014-11-13 -- Improved how the pacakge handles output of csv with non numerical data. Sanitze to get rid of new lines and commas 
 v0.3.7.1, 2014-11-13 -- Fixed an error in previous release that filled strings with None 
 v0.4.0.0, 2015-06-05 -- Merge pull request to allow time based on seconds since start 
+v0.5.0.0, 2016-02-16 -- Merge pull request to allow the handling of fixed-length arrays in messages. If a message contains an array,
+
+
 
