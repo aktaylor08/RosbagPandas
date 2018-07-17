@@ -8,9 +8,6 @@
 
   <license>Apache-2.0</license>
 
-  <!-- Url tags are optional, but multiple are allowed, one per tag -->
-  <!-- Optional attribute type can be: website, bugtracker, or repository -->
-  <!-- Example: -->
   <url type="website">https://github.com/aktaylor08/RosbagPandas</url>
 
   <author email="aktaylor08@gmail.com">Adam Taylor</author>
