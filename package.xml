@@ -16,8 +16,8 @@
   <author email="aktaylor08@gmail.com">Adam Taylor</author>
 
   <exec_depend>python-matplotlib</exec_depend>
+  <exec_depend>python-numpy</exec_depend>
   <exec_depend>python-pandas</exec_depend>
-  <exec_depend>python-python-numpy</exec_depend>
   <exec_depend>rosbag</exec_depend>
   <exec_depend>roslib</exec_depend>
 
