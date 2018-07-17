@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 import rosbag_pandas
-import matplotlib.pyplot as plt
 
 import os
 
