@@ -3,14 +3,12 @@
 import warnings
 import re
 import subprocess
-import types
 import yaml
 
 import pandas as pd
 import numpy as np
 
 import rosbag
-import rospy
 from roslib.message import get_message_class
 
 
@@ -287,8 +285,4 @@ def clean_for_export(df):
         else:
             new_df[c] = df[c]
 
-    return new_df 
-
-
-if __name__ == '__main__':
-    print('hello')
+    return new_df
