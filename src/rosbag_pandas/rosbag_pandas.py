@@ -4,6 +4,7 @@ import warnings
 import re
 import subprocess
 import yaml
+import six
 
 import pandas as pd
 import numpy as np
@@ -43,7 +44,7 @@ def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False, s
     # create datastore
     datastore = {}
     for topic in dmap.keys():
-        for f, key in dmap[topic].iteritems():
+        for f, key in six.iteritems(dmap[topic]):
             t = msg_type[topic][f]
             if isinstance(t, int) or isinstance(t, float):
                 arr = np.empty(length)
@@ -76,7 +77,7 @@ def bag_to_dataframe(bag_name, include=None, exclude=None, parse_header=False, s
             else:
                 index[idx] = mt.to_nsec()
         fields = dmap[topic]
-        for f, key in fields.iteritems():
+        for f, key in six.iteritems(fields):
             try:
                 d = get_message_data(msg, f)
                 if isinstance(d, tuple):
@@ -140,7 +141,7 @@ def prune_topics(bag_topics, include, exclude):
     if include is None:
         for t in bag_topics:
             topics_to_use.add(t)
-    elif isinstance(include, basestring):
+    elif isinstance(include, six.string_types):
         check = re.compile(include)
         for t in bag_topics:
             if re.match(check, t) is not None:
@@ -161,7 +162,7 @@ def prune_topics(bag_topics, include, exclude):
     # now exclude the exclusions
     if exclude is None:
         pass
-    elif isinstance(exclude, basestring):
+    elif isinstance(exclude, six.string_types):
         check = re.compile(exclude)
         for t in list(topics_to_use):
             if re.match(check, t) is not None:
@@ -275,7 +276,7 @@ def get_key_name(name):
 
 def clean_for_export(df):
     new_df = pd.DataFrame()
-    for c, t in df.dtypes.iteritems():
+    for c, t in six.iteritems(df.dtypes):
         if t.kind in 'OSUV':
             s = df[c].dropna().apply(func=str)
             s = s.str.replace('\n', '')
