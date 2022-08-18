@@ -212,7 +212,7 @@ def get_bag_info(bag_file):
     # Get the info on the bag
     bag_info = yaml.load(subprocess.Popen(
         ['rosbag', 'info', '--yaml', bag_file],
-        stdout=subprocess.PIPE).communicate()[0])
+        stdout=subprocess.PIPE).communicate()[0], Loader=yaml.FullLoader)
     return bag_info
 
 
